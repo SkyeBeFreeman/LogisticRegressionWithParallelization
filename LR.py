@@ -37,12 +37,13 @@ print("train_y type: " + str(type(train_y)))
 print("train_y shape: " + str(train_y.shape))
 print(time.strftime("%Y-%m-%d %H:%M:%S") + " 训练集读取完成", flush=True)
 
-# 平均归一化
+# 平均归一化训练集feature
 x_min = train_x.min(0)
 x_max = train_x.max(0)
 x_diff = x_max - x_min
 x = (x - x_min)/x_diff
 
+# 一些参数的初始化
 m = train_x.shape[0]
 n = train_x.shape[1]
 alpha = 0.1
@@ -51,6 +52,33 @@ lmd = 0.1
 step = 1
 theta = np.random.random((n, 1))
 
+# 定义sigmoid函数
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
+# 定义矩阵点乘
+def dotMultiply(X, Y):
+    X_row = X.shape[0]
+    X_col = X.shape[1]
+    Y_row = Y.shape[0]
+    Y_col = Y.shape[1]
+    result = []
+    for i in range(X_row):
+        line = []
+        for j in range(Y_col):
+            ans = 0
+            for a in range(X_col):
+                ans += X[i][a] * Y[a][j]
+            line.append(ans)
+        result.append(line)
+    result = np.array(result)
+    return result.reshape((X_row, Y_col))
+
+
+# 训练模型
+cost = 0
+change = 1
+cnt = 0
+while (change >= threshold):
+    h = sigmoid(train_x.dot(theta))
+    new_cost = np.sum()
