@@ -5,7 +5,6 @@ from random import randrange
 from math import sqrt
 from scipy import sparse
 import numpy as np
-import pandas as pd
 import datetime,time
 
 # 数据列数 = 1 + 132
@@ -37,4 +36,12 @@ print("train_x shape: " + str(train_x.shape))
 print("train_y type: " + str(type(train_y)))
 print("train_y shape: " + str(train_y.shape))
 print(time.strftime("%Y-%m-%d %H:%M:%S") + " 训练集读取完成", flush=True)
+
+# 平均归一化
+x_min = train_x.min(0)
+x_max = train_x.max(0)
+x_diff = x_max - x_min
+x = (x - x_min)/x_diff
+
+
 
