@@ -12,9 +12,9 @@ import datetime,time
 # 自定义异常
 class MyError(Exception):
     def __init__(self, value):
-         self.value = value
-     def __str__(self):
-         return repr(self.value)
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 train_x = []
 train_y = []
@@ -69,6 +69,8 @@ def dotMultiply(X, Y):
     X_col = X.shape[1]
     Y_row = Y.shape[0]
     Y_col = Y.shape[1]
+    if X_col != Y_row:
+        raise MyError("矩阵大小不适配")
     result = []
     for i in range(X_row):
         line = []
@@ -87,13 +89,29 @@ def myMultiply(X, Y):
     X_col = X.shape[1]
     Y_row = Y.shape[0]
     Y_col = Y.shape[1]
+    if X_col != Y_col or X_row != Y_row:
+        raise MyError("矩阵大小不匹配")
+    result = []
+    for i in range(X_row):
+        line = []
+        for j in range(Y_col):
+            line.append(X[i][j] * Y[i][j])
+        result.append(line)
+    result = np.array(result)
+    return result.reshape((X_row, Y_col))
 
+# 定义矩阵求和
+def mySum(X):
+    X_row = X.shape[0]
+    ans = 0
+    for i in range(X_row):
+        ans += X[i][0]
+    return ans
 
 # 训练模型
 cost = 0
 change = 1
 cnt = 0
 while (change >= threshold):
-    h = sigmoid(train_x.dot(theta))
-    new_cost = np.sum()
-    new_cost = np.sum(train_y * np.log(h) - (1 - train_y) * np.log(1 - h))
+    h = sigmoid(dotMultiply(train_x, theta))
+    new_cost = mySum(())
