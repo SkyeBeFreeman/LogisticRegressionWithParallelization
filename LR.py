@@ -43,5 +43,14 @@ x_max = train_x.max(0)
 x_diff = x_max - x_min
 x = (x - x_min)/x_diff
 
+m = train_x.shape[0]
+n = train_x.shape[1]
+alpha = 0.1
+threshold = 0.0000001
+lmd = 0.1
+step = 1
+theta = np.random.random((n, 1))
 
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
 
