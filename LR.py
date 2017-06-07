@@ -9,6 +9,13 @@ import datetime,time
 
 # 数据列数 = 1 + 132
 
+# 自定义异常
+class MyError(Exception):
+    def __init__(self, value):
+         self.value = value
+     def __str__(self):
+         return repr(self.value)
+
 train_x = []
 train_y = []
 # 加载训练集
@@ -74,6 +81,13 @@ def dotMultiply(X, Y):
     result = np.array(result)
     return result.reshape((X_row, Y_col))
 
+# 定义矩阵对应位置相乘
+def myMultiply(X, Y):
+    X_row = X.shape[0]
+    X_col = X.shape[1]
+    Y_row = Y.shape[0]
+    Y_col = Y.shape[1]
+
 
 # 训练模型
 cost = 0
@@ -82,3 +96,4 @@ cnt = 0
 while (change >= threshold):
     h = sigmoid(train_x.dot(theta))
     new_cost = np.sum()
+    new_cost = np.sum(train_y * np.log(h) - (1 - train_y) * np.log(1 - h))
