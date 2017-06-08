@@ -2,9 +2,7 @@
 
 from random import seed
 from random import randrange
-from math import sqrt
-from scipy import sparse
-import numpy as np
+from math import sqrt, log
 import datetime,time
 
 # 数据列数 = 1 + 132
@@ -18,10 +16,12 @@ class MyError(Exception):
 
 train_x = []
 train_y = []
+m = 0
+n = 132
 # 加载训练集
 print(time.strftime("%Y-%m-%d %H:%M:%S") + " 训练集读入中...", flush=True)
 with open("train_data.txt", 'r') as file:
-    cnt = 0
+    global m
     for line in file:
         train_row_data = [0] * 132
         row_data = str(line).split()
@@ -33,11 +33,10 @@ with open("train_data.txt", 'r') as file:
             if (key <= 131):
                 train_row_data[key - 1] = value
         train_x.append(train_row_data)
-        cnt += 1
-        # if (cnt == 500):
+        m += 1
+        # if (m == 500):
         #     break
-train_x = np.array(train_x)
-train_y = np.array(train_y).reshape((-1,1))
+
 print("train_x type: " + str(type(train_x)))
 print("train_x shape: " + str(train_x.shape))
 print("train_y type: " + str(type(train_y)))
@@ -45,14 +44,20 @@ print("train_y shape: " + str(train_y.shape))
 print(time.strftime("%Y-%m-%d %H:%M:%S") + " 训练集读取完成", flush=True)
 
 # 平均归一化训练集feature
-x_min = train_x.min(0)
-x_max = train_x.max(0)
-x_diff = x_max - x_min
-x = (x - x_min)/x_diff
+for i in range(n):
+    x_min = train_x[0][i]
+    x_max = train_x[0][i]
+    for j in range(m):
+        if (x_min > train_x[j][i]):
+            x_min = train_x[j][i]
+        if (x_max < train_x[j][i]):
+            x_max = train_x[j][i]
+    x_diff = (x_max - x_min) * 1.0
+    for j in range(m):
+        train_x[j][i] = (train_x[j][i] - x_min) * 1.0 / x_diff
 
 # 一些参数的初始化
-m = train_x.shape[0]
-n = train_x.shape[1]
+
 alpha = 0.1
 threshold = 0.0000001
 lmd = 0.1
@@ -63,7 +68,7 @@ theta = np.random.random((n, 1))
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-# 定义矩阵点乘
+# 矩阵点乘
 def dotMultiply(X, Y):
     X_row = X.shape[0]
     X_col = X.shape[1]
@@ -83,7 +88,7 @@ def dotMultiply(X, Y):
     result = np.array(result)
     return result.reshape((X_row, Y_col))
 
-# 定义矩阵对应位置相乘
+# 矩阵对应位置相乘
 def myMultiply(X, Y):
     X_row = X.shape[0]
     X_col = X.shape[1]
@@ -100,7 +105,7 @@ def myMultiply(X, Y):
     result = np.array(result)
     return result.reshape((X_row, Y_col))
 
-# 定义矩阵求和
+# 矩阵第一列求和
 def mySum(X):
     X_row = X.shape[0]
     ans = 0
@@ -108,10 +113,18 @@ def mySum(X):
         ans += X[i][0]
     return ans
 
+# 获取代价函数值
+def getCost(m, h):
+    ans = 0
+    for i in range(m):
+        if train_y[i][0] == 1:
+            for j in range(n):
+                ans += math.log(h[])
+
 # 训练模型
 cost = 0
 change = 1
 cnt = 0
 while (change >= threshold):
     h = sigmoid(dotMultiply(train_x, theta))
-    new_cost = mySum(())
+    new_cost = getCost()
