@@ -2,7 +2,7 @@
 
 from random import seed
 from random import randrange
-from math import sqrt, log
+from math import sqrt, log, exp, pow
 import datetime,time
 
 # 数据列数 = 1 + 132
@@ -57,16 +57,18 @@ for i in range(n):
         train_x[j][i] = (train_x[j][i] - x_min) * 1.0 / x_diff
 
 # 一些参数的初始化
-
 alpha = 0.1
 threshold = 0.0000001
 lmd = 0.1
 step = 1
-theta = np.random.random((n, 1))
+theta = [1] * n
 
-# 定义sigmoid函数
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+# sigmoid函数
+def sigmoid(X):
+    ans = 0
+    for i in X:
+        ans += 1 / (1 + exp(-i))
+    return ans
 
 # 矩阵点乘
 def dotMultiply(X, Y):
@@ -85,8 +87,7 @@ def dotMultiply(X, Y):
                 ans += X[i][a] * Y[a][j]
             line.append(ans)
         result.append(line)
-    result = np.array(result)
-    return result.reshape((X_row, Y_col))
+    return result
 
 # 矩阵对应位置相乘
 def myMultiply(X, Y):
@@ -102,8 +103,17 @@ def myMultiply(X, Y):
         for j in range(Y_col):
             line.append(X[i][j] * Y[i][j])
         result.append(line)
-    result = np.array(result)
-    return result.reshape((X_row, Y_col))
+    return result
+
+# theta转秩
+def T(X):
+    result = []
+    for i in range(n):
+        line = []
+        line.append(X[i])
+        result.append(line)
+    return result
+
 
 # 矩阵第一列求和
 def mySum(X):
@@ -114,17 +124,23 @@ def mySum(X):
     return ans
 
 # 获取代价函数值
-def getCost(m, h):
+def getCost(m, n, lmd, h, theta):
     ans = 0
     for i in range(m):
         if train_y[i][0] == 1:
-            for j in range(n):
-                ans += math.log(h[])
+            ans += math.log(h[i][0]) * (-1.0) / m
+        else:
+            ans += math.log(1.0 - h[i][0]) * (-1.0) / m
+    regularzilation = 0
+    for i in range(n):
+        regularzilation += pow(theta[i], 2)
+    regularzilation *= lmd / (2 * m)
+    return ans + regularzilation
 
 # 训练模型
 cost = 0
 change = 1
 cnt = 0
 while (change >= threshold):
-    h = sigmoid(dotMultiply(train_x, theta))
-    new_cost = getCost()
+    h = sigmoid(dotMultiply(train_x, T(theta)))
+    new_cost = getCost(m, n, lmd, h, theta)
