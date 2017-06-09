@@ -73,9 +73,10 @@ def getCost(m, n, lmd, h, theta, train_y, pool):
     return ans + regularzilation
 
 # 获取代价函数值（并行化）任务
-def costTask(m, n, lmd, h, theta, train_y):
+def costTask(m, h, train_y):
     ans = 0
-    for i in range(m):
+    n = len(h)
+    for i in range(n):
         if train_y[i] == 1:
             ans += log(h[i][0]) * (-1.0) / m
         else:
@@ -86,12 +87,10 @@ def costTask(m, n, lmd, h, theta, train_y):
 def getCostP(m, n, lmd, h, theta, train_y, pool):
     ans = 0
     for i in range(cpu_cnt):
-        ans += pool.apply_async(costTask, (int(m / cpu_cnt),
-                                          n,
-                                          lmd,
-                                          h[int(m * i / cpu_cnt):][:],
-                                          theta,
-                                          train_y[int(m * i / cpu_cnt):][:],)).get()
+        anss = pool.apply_async(costTask, (m, h[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)][:],
+                                          train_y[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)],)).get()
+        ans += anss
+
     regularzilation = 0
     for i in range(n):
         regularzilation += pow(theta[i], 2)
@@ -129,7 +128,7 @@ if __name__ == "__main__":
                     train_row_data[key - 1] = value
             train_x.append(train_row_data)
             m += 1
-            if (m == 1000):
+            if (m == 100):
                 break
 
     print("train_x type: " + str(type(train_x)))
@@ -202,8 +201,8 @@ if __name__ == "__main__":
         change = fabs(cost - new_cost)
         cost = new_cost
         cnt += 1
-        if (cnt % step == 0):
-            print('cost:', cost, flush=True)
+        # if (cnt % step == 0):
+        #     print('cost:', cost, flush=True)
     print(strftime("%Y-%m-%d %H:%M:%S") + " 训练结束", flush=True)
     pool.close()
     pool.join()
