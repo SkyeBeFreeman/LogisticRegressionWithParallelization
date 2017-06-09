@@ -4,6 +4,7 @@ from random import random
 from math import log, exp, pow, fabs
 from time import strftime
 from multiprocessing import Pool, cpu_count
+import datetime
 
 # 数据列数 = 1 + 132
 
@@ -17,7 +18,7 @@ class MyError(Exception):
 
 
 # sigmoid函数
-def sigmoid(X, m):
+def sigmoid(X, m, pool):
     result = X
     for i in range(m):
         if X[i][0] > 100:
@@ -29,7 +30,31 @@ def sigmoid(X, m):
         except Exception as e:
             print (e)
             print(X[i][0])
-            print(test_x[i])
+    return result
+
+# sigmoid函数（并行化）任务
+def sigmoidTask(X):
+    result = X
+    m = len(X)
+    for i in range(m):
+        if X[i][0] > 100:
+            result[i][0] = 1
+        if X[i][0] < -100:
+            result[i][0] = 0
+        try:
+            result[i][0] = 1 / (1 + exp(-X[i][0]))
+        except Exception as e:
+            print (e)
+            print(X[i][0])
+    return result
+
+
+# sigmoid函数（并行化）
+def sigmoidP(X, m, pool):
+    result = []
+    cpu_cnt = cpu_count()
+    for i in range(cpu_cnt):
+        result.extend(pool.apply_async(sigmoidTask, (X[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)][:], )).get())
     return result
 
 # 矩阵点乘
@@ -86,11 +111,10 @@ def costTask(m, h, train_y):
 # 获取代价函数值（并行化）
 def getCostP(m, n, lmd, h, theta, train_y, pool):
     ans = 0
+    cpu_cnt = cpu_count()    
     for i in range(cpu_cnt):
-        anss = pool.apply_async(costTask, (m, h[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)][:],
+        ans += pool.apply_async(costTask, (m, h[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)][:],
                                           train_y[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)],)).get()
-        ans += anss
-
     regularzilation = 0
     for i in range(n):
         regularzilation += pow(theta[i], 2)
@@ -182,19 +206,19 @@ if __name__ == "__main__":
     threshold = 0.000001
     lmd = 0
     step = 1
-    # theta = [0.5] * n
-    theta = [random() for i in range(n)]
+    theta = [0.5] * n
+    # theta = [random() for i in range(n)]
 
     # 训练模型
+    startTime = datetime.datetime.now()
     print(strftime("%Y-%m-%d %H:%M:%S") + " 开始训练", flush=True)
     cost = 0
     change = 1
     cnt = 0
-    cpu_cnt = cpu_count()
-    pool = Pool(cpu_cnt)
+    pool = Pool(cpu_count())
     while (change >= threshold):
     # for x in range(1000):
-        h = sigmoid(dotMultiply(train_x, T(theta), m, n), m)
+        h = sigmoidP(dotMultiply(train_x, T(theta), m, n), m, pool)
         # print(h)
         new_cost = getCostP(m, n, lmd, h, theta, train_y, pool)
         getNewTheta(m, n, train_x, train_y, h)
@@ -203,9 +227,8 @@ if __name__ == "__main__":
         cnt += 1
         # if (cnt % step == 0):
         #     print('cost:', cost, flush=True)
-    print(strftime("%Y-%m-%d %H:%M:%S") + " 训练结束", flush=True)
-    pool.close()
-    pool.join()
+    endTime = datetime.datetime.now()
+    print(strftime("%Y-%m-%d %H:%M:%S") + " 训练结束，用时" + str((endTime - startTime).seconds) + "秒", flush=True)
     print(theta)
     # mymax = 0
     # for i in range(n):
@@ -214,7 +237,7 @@ if __name__ == "__main__":
     # print(mymax)
 
     print(strftime("%Y-%m-%d %H:%M:%S") + " 开始预测", flush=True)
-    h = sigmoid(dotMultiply(test_x, T(theta), test_m, n), test_m)
+    h = sigmoid(dotMultiply(test_x, T(theta), test_m, n), test_m, pool)
     # print(h)
     print(strftime("%Y-%m-%d %H:%M:%S") + " 预测结束", flush=True)
 
@@ -231,3 +254,5 @@ if __name__ == "__main__":
     # print(strftime("%Y-%m-%d %H:%M:%S") + " 结束写入结果", flush=True)
 
     print(strftime("%Y-%m-%d %H:%M:%S") + " 结束", flush=True)
+    pool.close()
+    pool.join()
