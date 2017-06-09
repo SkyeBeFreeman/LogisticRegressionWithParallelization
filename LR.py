@@ -145,6 +145,16 @@ def getCost(m, n, lmd, h, theta):
     regularzilation *= lmd / (2 * m)
     return ans + regularzilation
 
+# 获取新的theta
+def getNewTheta(m, n, train_x, train_y, h):
+    global theta
+    for i in range(n):
+        gradient = 0
+        for j in range(m):
+            gradient += (h[j][0] - train_y[j]) * train_x[j][i]
+        gradient -= lmd * theta[i]
+        gradient *= ((- alpha) / m)
+        theta[i] += gradient
 
 # 训练模型
 print(strftime("%Y-%m-%d %H:%M:%S") + " 开始训练", flush=True)
@@ -156,13 +166,7 @@ for x in range(1000):
     h = sigmoid(dotMultiply(train_x, T(theta), m, n), m)
     # print(h)
     new_cost = getCost(m, n, lmd, h, theta)
-    for i in range(n):
-        gradient = 0
-        for j in range(m):
-            gradient += (h[j][0] - train_y[j]) * train_x[j][i]
-        gradient -= lmd * theta[i]
-        gradient *= ((- alpha) / m)
-        theta[i] += gradient
+    getNewTheta(m, n, train_x, train_y, h)
     change = fabs(cost - new_cost)
     cost = new_cost
     cnt += 1
@@ -170,16 +174,16 @@ for x in range(1000):
         print('cost:', cost, flush=True)
 print(strftime("%Y-%m-%d %H:%M:%S") + " 训练结束", flush=True)
 
-# print(theta)
-# mymax = 0
-# for i in range(n):
-#     if mymax < fabs(theta[i]):
-#         mymax = fabs(theta[i])
-# print(mymax)
+print(theta)
+mymax = 0
+for i in range(n):
+    if mymax < fabs(theta[i]):
+        mymax = fabs(theta[i])
+print(mymax)
 
 print(strftime("%Y-%m-%d %H:%M:%S") + " 开始预测", flush=True)
 h = sigmoid(dotMultiply(test_x, T(theta), test_m, n), test_m)
-# print(h)
+print(h)
 print(strftime("%Y-%m-%d %H:%M:%S") + " 预测结束", flush=True)
 
 rounded = [round(x) for x in h]
