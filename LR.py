@@ -4,6 +4,7 @@ from random import random
 from math import log, exp, pow, fabs
 from time import strftime
 from multiprocessing import Pool, cpu_count
+from sys import exit
 import datetime
 
 # 数据列数 = 1 + 132
@@ -56,6 +57,7 @@ def sigmoidP(X, m, pool):
     results = []
     for i in range(cpu_cnt):
         res = pool.apply_async(sigmoidTask, (X[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)][:], ))
+        results.append(res)
     for res in results:
         result.extend(res.get())
     return result
@@ -129,7 +131,7 @@ def getCostP(m, n, lmd, h, theta, train_y, pool):
     return ans + regularzilation
 
 # 获取新的theta
-def getNewTheta(m, n, train_x, train_y, h, pool):
+def getNewTheta(m, n, lmd, alpha, train_x, train_y, h, pool):
     global theta
     for i in range(n):
         gradient = 0
@@ -140,17 +142,41 @@ def getNewTheta(m, n, train_x, train_y, h, pool):
         theta[i] += gradient
 
 # 获取新的theta（并行化）任务
-def newThetaTask():
-    
+def newThetaTask(m, lmd, alpha, train_x, train_y, h, theta):
+    n = len(theta)
+    ans = []
+    for i in range(n):
+        gradient = 0
+        for j in range(m):
+            try:
+                z = train_x[j][i]
+            except Exception as e:
+                print(j, i)
+                exit(0)
+            gradient += (h[j][0] - train_y[j]) * z
+        gradient -= lmd * theta[i]
+        gradient *= ((- alpha) / m)
+        ans.append(theta[i] + gradient)
+    return ans
 
 # 获取新的theta（并行化）
-def getNewThetaP(m, n, train_x, train_y, h, pool):
+def getNewThetaP(m, n, lmd, alpha, train_x, train_y, h, pool):
     global theta
+    answer = []
     cpu_cnt = cpu_count()
     results = []
     for i in range(cpu_cnt):
-        result = pool.apply_async()
-
+        result = pool.apply_async(newThetaTask, (m,
+                                                 lmd,
+                                                 alpha,
+                                                 [line[int(n * i / cpu_cnt):int(n * (i + 1) / cpu_cnt)] for line in train_x],
+                                                 train_y,
+                                                 h,
+                                                 theta[int(n * i / cpu_cnt):int(n * (i + 1) / cpu_cnt)],))
+        results.append(result)
+    for result in results:
+        answer.extend(result.get())
+    theta = answer
 
 if __name__ == "__main__":
     train_x = []
@@ -238,15 +264,16 @@ if __name__ == "__main__":
     pool = Pool(cpu_count())
     while (change >= threshold):
     # for x in range(1000):
-        h = sigmoid(dotMultiply(train_x, T(theta), m, n), m, pool)
+        h = sigmoidP(dotMultiply(train_x, T(theta), m, n), m, pool)
         # print(h)
-        new_cost = getCost(m, n, lmd, h, theta, train_y, pool)
-        getNewTheta(m, n, train_x, train_y, h, pool)
+        new_cost = getCostP(m, n, lmd, h, theta, train_y, pool)
+        getNewThetaP(m, n, lmd, alpha, train_x, train_y, h, pool)
         change = fabs(cost - new_cost)
         cost = new_cost
         cnt += 1
         # if (cnt % step == 0):
         #     print('cost:', cost, flush=True)
+    print('cost:', cost, flush=True)
     endTime = datetime.datetime.now()
     print(strftime("%Y-%m-%d %H:%M:%S") + " 训练结束，用时" + str((endTime - startTime).seconds) + "秒", flush=True)
     print(theta)
