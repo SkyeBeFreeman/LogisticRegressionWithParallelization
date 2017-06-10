@@ -53,8 +53,11 @@ def sigmoidTask(X):
 def sigmoidP(X, m, pool):
     result = []
     cpu_cnt = cpu_count()
+    results = []
     for i in range(cpu_cnt):
-        result.extend(pool.apply_async(sigmoidTask, (X[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)][:], )).get())
+        res = pool.apply_async(sigmoidTask, (X[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)][:], ))
+    for res in results:
+        result.extend(res.get())
     return result
 
 # 矩阵点乘
@@ -111,10 +114,14 @@ def costTask(m, h, train_y):
 # 获取代价函数值（并行化）
 def getCostP(m, n, lmd, h, theta, train_y, pool):
     ans = 0
-    cpu_cnt = cpu_count()    
+    cpu_cnt = cpu_count()
+    results = []
     for i in range(cpu_cnt):
-        ans += pool.apply_async(costTask, (m, h[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)][:],
-                                          train_y[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)],)).get()
+        result = pool.apply_async(costTask, (m, h[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)][:],
+                                          train_y[int(m * i / cpu_cnt):int(m * (i + 1) / cpu_cnt)],))
+        results.append(result)
+    for result in results:
+        ans += result.get()
     regularzilation = 0
     for i in range(n):
         regularzilation += pow(theta[i], 2)
@@ -122,7 +129,7 @@ def getCostP(m, n, lmd, h, theta, train_y, pool):
     return ans + regularzilation
 
 # 获取新的theta
-def getNewTheta(m, n, train_x, train_y, h):
+def getNewTheta(m, n, train_x, train_y, h, pool):
     global theta
     for i in range(n):
         gradient = 0
@@ -131,6 +138,19 @@ def getNewTheta(m, n, train_x, train_y, h):
         gradient -= lmd * theta[i]
         gradient *= ((- alpha) / m)
         theta[i] += gradient
+
+# 获取新的theta（并行化）任务
+def newThetaTask():
+    
+
+# 获取新的theta（并行化）
+def getNewThetaP(m, n, train_x, train_y, h, pool):
+    global theta
+    cpu_cnt = cpu_count()
+    results = []
+    for i in range(cpu_cnt):
+        result = pool.apply_async()
+
 
 if __name__ == "__main__":
     train_x = []
@@ -218,10 +238,10 @@ if __name__ == "__main__":
     pool = Pool(cpu_count())
     while (change >= threshold):
     # for x in range(1000):
-        h = sigmoidP(dotMultiply(train_x, T(theta), m, n), m, pool)
+        h = sigmoid(dotMultiply(train_x, T(theta), m, n), m, pool)
         # print(h)
-        new_cost = getCostP(m, n, lmd, h, theta, train_y, pool)
-        getNewTheta(m, n, train_x, train_y, h)
+        new_cost = getCost(m, n, lmd, h, theta, train_y, pool)
+        getNewTheta(m, n, train_x, train_y, h, pool)
         change = fabs(cost - new_cost)
         cost = new_cost
         cnt += 1
