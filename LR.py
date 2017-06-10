@@ -31,6 +31,7 @@ def sigmoid(X, m, pool):
         except Exception as e:
             print (e)
             print(X[i][0])
+            exit(0)
     return result
 
 # sigmoid函数（并行化）任务
@@ -47,6 +48,7 @@ def sigmoidTask(X):
         except Exception as e:
             print (e)
             print(X[i][0])
+            exit(0)
     return result
 
 
@@ -151,6 +153,7 @@ def newThetaTask(m, lmd, alpha, train_x, train_y, h, theta):
             try:
                 z = train_x[j][i]
             except Exception as e:
+                print(e)
                 print(j, i)
                 exit(0)
             gradient += (h[j][0] - train_y[j]) * z
@@ -198,7 +201,7 @@ if __name__ == "__main__":
                     train_row_data[key - 1] = value
             train_x.append(train_row_data)
             m += 1
-            if (m == 100):
+            if (m == 500):
                 break
 
     print("train_x type: " + str(type(train_x)))
