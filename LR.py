@@ -16,8 +16,6 @@ class MyError(Exception):
     def __str__(self):
         return repr(self.value)
 
-
-
 # sigmoid函数
 def sigmoid(X, m, pool):
     result = X
