@@ -289,7 +289,7 @@ if __name__ == "__main__":
     # print(h)
     print(strftime("%Y-%m-%d %H:%M:%S") + " 预测结束", flush=True)
 
-    # rounded = [round(x[0]) for x in h]
+    rounded = [round(x[0]) for x in h]
 
     print(strftime("%Y-%m-%d %H:%M:%S") + " 开始写入结果", flush=True)
     with open('result.txt', 'w') as output:
