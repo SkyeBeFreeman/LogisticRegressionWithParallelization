@@ -253,8 +253,8 @@ if __name__ == "__main__":
     threshold = 0.000001
     lmd = 0.5
     step = 50
-    theta = [0.5] * n
-    # theta = [random() for i in range(n)]
+    # theta = [0.5] * n
+    theta = [random() for i in range(n)]
 
     # 训练模型
     startTime = datetime.datetime.now()
