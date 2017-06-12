@@ -201,7 +201,7 @@ if __name__ == "__main__":
                     train_row_data[key - 1] = value
             train_x.append(train_row_data)
             m += 1
-            if (m == 500):
+            if (m == 100000):
                 break
 
     print("train_x type: " + str(type(train_x)))
@@ -253,8 +253,8 @@ if __name__ == "__main__":
     # 一些参数的初始化
     alpha = 0.1
     threshold = 0.000001
-    lmd = 0
-    step = 1
+    lmd = 0.5
+    step = 50
     theta = [0.5] * n
     # theta = [random() for i in range(n)]
 
@@ -267,15 +267,15 @@ if __name__ == "__main__":
     pool = Pool(cpu_count())
     while (change >= threshold):
     # for x in range(1000):
-        h = sigmoidP(dotMultiply(train_x, T(theta), m, n), m, pool)
+        h = sigmoid(dotMultiply(train_x, T(theta), m, n), m, pool)
         # print(h)
-        new_cost = getCostP(m, n, lmd, h, theta, train_y, pool)
-        getNewThetaP(m, n, lmd, alpha, train_x, train_y, h, pool)
+        new_cost = getCost(m, n, lmd, h, theta, train_y, pool)
+        getNewTheta(m, n, lmd, alpha, train_x, train_y, h, pool)
         change = fabs(cost - new_cost)
         cost = new_cost
         cnt += 1
-        # if (cnt % step == 0):
-        #     print('cost:', cost, flush=True)
+        if (cnt % step == 0):
+            print('cost:', cost, flush=True)
     print('cost:', cost, flush=True)
     endTime = datetime.datetime.now()
     print(strftime("%Y-%m-%d %H:%M:%S") + " 训练结束，用时" + str((endTime - startTime).seconds) + "秒", flush=True)
@@ -293,15 +293,15 @@ if __name__ == "__main__":
 
     # rounded = [round(x[0]) for x in h]
 
-    # print(strftime("%Y-%m-%d %H:%M:%S") + " 开始写入结果", flush=True)
-    # with open('result.txt', 'w') as output:
-    #     index = 0
-    #     output.write('id,label\n')
-    #     for i in rounded:
-    #         Id, val = index, i
-    #         output.write('{},{}\n'.format(Id, val))
-    #         index += 1
-    # print(strftime("%Y-%m-%d %H:%M:%S") + " 结束写入结果", flush=True)
+    print(strftime("%Y-%m-%d %H:%M:%S") + " 开始写入结果", flush=True)
+    with open('result.txt', 'w') as output:
+        index = 0
+        output.write('id,label\n')
+        for i in rounded:
+            Id, val = index, i
+            output.write('{},{}\n'.format(Id, val))
+            index += 1
+    print(strftime("%Y-%m-%d %H:%M:%S") + " 结束写入结果", flush=True)
 
     print(strftime("%Y-%m-%d %H:%M:%S") + " 结束", flush=True)
     pool.close()
